@@ -57,6 +57,10 @@ textarea{font-family:inherit;margin:6px 0 14px}
 .auto{justify-content:center;margin-top:12px;color:var(--muted);font-weight:400}
 .badge{font-size:.8rem;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--line)}
 .mic:disabled{opacity:.6}
+.kids{display:flex;gap:8px;margin-bottom:8px}.kids button{flex:1;padding:10px 6px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:.95rem}
+.kids button.on{border-color:var(--accent);outline:2px solid var(--accent)}
+.sels{display:flex;gap:8px}.sels select{flex:1;min-width:0}
+.lvlnote{color:var(--muted);font-size:.85rem;margin-top:6px;min-height:1em}
 .notice{background:var(--warnbg);color:var(--warn);padding:12px;border-radius:12px;margin-top:8px}
 label{font-weight:600}
 .tips{color:var(--muted);font-size:.85rem;line-height:1.6;margin-top:18px}
@@ -89,7 +93,9 @@ label{font-weight:600}
   </section>
 
   <section id="tab-word" class="hidden">
-    <select id="setSel2"></select>
+    <div class="kids"><button data-kid="pet">👦 Howard｜B1 PET</button><button data-kid="movers">👧 Audrey｜A1 Movers</button></div>
+    <div class="sels"><select id="lvlSel" aria-label="程度"></select><select id="packSel" aria-label="分包"></select></div>
+    <div id="lvlNote" class="lvlnote"></div>
     <div class="card">
       <div class="meta"><span id="wPos"></span>
         <label class="toggle"><input type="checkbox" id="wRec" checked> 錄下我的聲音</label></div>
@@ -119,6 +125,7 @@ label{font-weight:600}
   <p class="tips">使用小提醒：第一次使用請允許麥克風。iPad／iPhone 需開啟「設定 › 一般 › 鍵盤 › 啟用聽寫」，並保持網路連線。戴有麥克風的耳機、在安靜的地方念，辨識會更準。點句子裡任何一個字，可以單獨聽那個字。單字分數是依語音辨識結果換算，用來鼓勵反覆練習，不等同專業音素評測。</p>
 </main>
 
+<script src="words.js"></script>
 <script>
 /* ===== 內建題庫：依全民英檢／劍橋英檢程度與主題挑選常考字，例句為自編。新增一組照格式加入即可（level 決定選單分類） ===== */
 const BANK = [
@@ -264,7 +271,8 @@ let sets=BANK.slice(),cur=0,sIdx=0,wIdx=0,wStat={};
 const STOP=new Set("this that with have they there what your from were will very like over then them when some about into just also than been".split(" "));
 function extractWords(sents){const seen=new Set(),out=[];sents.join(" ").split(/\s+/).forEach(w=>{const c=w.replace(/[^A-Za-z']/g,"");const k=c.toLowerCase();if(c.length>=4&&!STOP.has(k)&&!seen.has(k)){seen.add(k);out.push(c);}});return out;}
 const curSet=()=>sets[cur];
-const curWords=()=>{const s=curSet();return s.words&&s.words.length?s.words:extractWords(s.sentences||[]);};
+const curWords=()=>{if(wSrc.k==="L"&&WB[wSrc.i])return WB[wSrc.i].words.slice(wSrc.p*PACK,(wSrc.p+1)*PACK);
+  const s=sets[wSrc.i]||sets[0];return s.words&&s.words.length?s.words:extractWords(s.sentences||[]);};
 
 /* URL 參數：?t=標題&s=句子1|句子2&w=單字1|單字2 （方便從其他練習頁連過來） */
 (function(){const q=new URLSearchParams(location.search);const s=q.get("s"),w=q.get("w");
@@ -272,10 +280,37 @@ const curWords=()=>{const s=curSet();return s.words&&s.words.length?s.words:extr
 
 function fillSelects(){const groups=[];sets.forEach((s,i)=>{const g=s.level||"自訂／連結";let G=groups.find(x=>x.g===g);if(!G)groups.push(G={g,items:[]});G.items.push(`<option value="${i}">${esc(s.title.replace(g+"｜",""))}</option>`);});
   const html=groups.map(G=>`<optgroup label="${esc(G.g)}">${G.items.join("")}</optgroup>`).join("");
-  [$("setSel1"),$("setSel2")].forEach(sel=>{sel.innerHTML=html;sel.value=cur;});}
+  $("setSel1").innerHTML=html;$("setSel1").value=cur;fillLvl();}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);}
-function setSet(i){cur=+i;sIdx=0;wIdx=0;fillSelects();renderSentence();renderWord();}
-$("setSel1").onchange=e=>setSet(e.target.value);$("setSel2").onchange=e=>setSet(e.target.value);
+function setSet(i){cur=+i;sIdx=0;fillSelects();renderSentence();}
+$("setSel1").onchange=e=>setSet(e.target.value);
+
+/* ===== 單字題庫：程度 × 分包（每包 PACK 個字） ===== */
+const WB=Array.isArray(window.WORDBANK)?window.WORDBANK:[];
+const PACK=20;
+let wSrc={k:"S",i:0,p:0};
+function packCount(){return wSrc.k==="L"?Math.ceil(WB[wSrc.i].words.length/PACK):1;}
+const wKey=()=>wSrc.k+wSrc.i+"_"+wSrc.p;
+function fillLvl(){
+  const groups=[];
+  WB.forEach((L,i)=>{let G=groups.find(x=>x.g===L.route);if(!G)groups.push(G={g:L.route,items:[]});G.items.push(`<option value="L${i}">${esc(L.name)}（${L.words.length} 字）</option>`);});
+  const ex=sets.map((s,i)=>(s.words&&s.words.length)||(s.sentences&&s.sentences.length)?`<option value="S${i}">${esc(s.title)}</option>`:"").join("");
+  $("lvlSel").innerHTML=groups.map(G=>`<optgroup label="${esc(G.g)}">${G.items.join("")}</optgroup>`).join("")+(ex?`<optgroup label="範例／自訂">${ex}</optgroup>`:"");
+  $("lvlSel").value=wSrc.k+wSrc.i;fillPack();
+}
+function fillPack(){
+  const ps=$("packSel");
+  if(wSrc.k!=="L"){ps.classList.add("hidden");$("lvlNote").textContent="";return;}
+  ps.classList.remove("hidden");const W=WB[wSrc.i].words;let o="";
+  for(let p=0;p<packCount();p++){const a=W[p*PACK],b=W[Math.min(W.length,(p+1)*PACK)-1];o+=`<option value="${p}">第 ${p+1} 包｜${esc(a)} – ${esc(b)}</option>`;}
+  ps.innerHTML=o;ps.value=wSrc.p;$("lvlNote").textContent=WB[wSrc.i].note||"";
+}
+function setW(k,i,p){wSrc={k,i:+i,p:+p||0};wIdx=0;$("lvlSel").value=k+i;fillPack();renderWord();markKid();
+  try{localStorage.setItem("ha_wsrc",JSON.stringify(wSrc));}catch(e){}}
+$("lvlSel").onchange=e=>{const v=e.target.value;setW(v[0],v.slice(1),0);};
+$("packSel").onchange=e=>setW("L",wSrc.i,e.target.value);
+function markKid(){document.querySelectorAll(".kids button").forEach(b=>{const L=WB[wSrc.i];b.classList.toggle("on",wSrc.k==="L"&&L&&L.id===b.dataset.kid);});}
+document.querySelectorAll(".kids button").forEach(b=>b.onclick=()=>{const i=WB.findIndex(L=>L.id===b.dataset.kid);if(i>=0)setW("L",i,0);else alert("題庫還沒放入這個程度的字表。");});
 
 /* ===== 分頁 ===== */
 function showTab(t){document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
@@ -357,17 +392,17 @@ async function recordAndListen(maxMs,onInterim,useRec){
   return {r,url};
 }
 function renderWord(ev){
-  const W=curWords();const st=wStat[cur]||(wStat[cur]={});
+  const W=curWords();const k=wKey();const st=wStat[k]||(wStat[k]={});
   if(!W.length){$("wPos").textContent="這組沒有單字";$("wText").textContent="";$("wList").innerHTML="";return;}
   if(wIdx>=W.length)wIdx=0;const w=W[wIdx];const rec=st[w];
-  $("wPos").textContent=`第 ${wIdx+1} / ${W.length} 個`;$("wText").textContent=w;
+  $("wPos").textContent=(wSrc.k==="L"?`第 ${wSrc.p+1}/${packCount()} 包・`:"")+`第 ${wIdx+1} / ${W.length} 個`;$("wText").textContent=w;
   $("wMic").textContent=rec&&rec.tries.length?(rec.best>=100?"▶ 再挑戰一次":"🔁 再念一次"):"▶ 先聽再念";
   if(ev){$("wResult").innerHTML=`<div class="big ${lvl(ev.score)}">${ev.score}<small> 分</small></div><div>${wCheer(ev.score)}</div>`;
     $("wStatus").textContent="我聽到：「"+ev.heard+"」";}
   else{$("wResult").innerHTML="";$("wStatus").textContent="";}
   $("wHist").textContent=rec&&rec.tries.length?`練習紀錄：${rec.tries.slice(-8).join(" → ")}　最高 ${rec.best} 分`:"";
   $("wPlay").classList.toggle("hidden",!(ev&&wAudioURL));
-  $("wPrev").disabled=wIdx===0;$("wNext").disabled=wIdx>=W.length-1;
+  $("wPrev").disabled=wIdx===0&&wSrc.p===0;$("wNext").disabled=wIdx>=W.length-1&&wSrc.p>=packCount()-1;
   $("wList").innerHTML=W.map((x,i)=>{const r=st[x];return `<div class="chip ${r?lvl(r.best):""} ${i===wIdx?"cur":""}" data-i="${i}"><span>${esc(x)}</span>${r?`<span class="badge">${r.best}</span>`:""}</div>`;}).join("");
 }
 $("wList").onclick=e=>{const c=e.target.closest(".chip");if(c){wIdx=+c.dataset.i;renderWord();}};
@@ -375,28 +410,31 @@ $("wSay").onclick=()=>{const W=curWords();if(W.length)say(W[wIdx]);};
 $("wSlow").onclick=()=>{const W=curWords();if(W.length)say(W[wIdx],true);};
 $("wAgain").onclick=()=>{const W=curWords();if(W.length)say(W[wIdx]);};
 $("wMine").onclick=()=>{if(wAudioURL){speechSynthesis.cancel();new Audio(wAudioURL).play();}};
-$("wPrev").onclick=()=>{if(wIdx>0){wIdx--;renderWord();}};
-$("wNext").onclick=()=>{if(wIdx<curWords().length-1){wIdx++;renderWord();}};
+function wStep(d){const n=curWords().length;
+  if(d>0){if(wIdx<n-1){wIdx++;renderWord();}else if(wSrc.p<packCount()-1){setW("L",wSrc.i,wSrc.p+1);}}
+  else{if(wIdx>0){wIdx--;renderWord();}else if(wSrc.p>0){setW("L",wSrc.i,wSrc.p-1);wIdx=curWords().length-1;renderWord();}}}
+$("wPrev").onclick=()=>wStep(-1);
+$("wNext").onclick=()=>wStep(1);
 $("wMic").onclick=async()=>{
   if(activeRec){activeRec.stop();return;}
   if(!SR){showSupport();return;}
-  const W=curWords();if(!W.length)return;const w=W[wIdx];const idx=wIdx,setAt=cur;
+  const W=curWords();if(!W.length)return;const w=W[wIdx];const idx=wIdx,setAt=wKey();
   $("wMic").disabled=true;$("wResult").innerHTML="";$("wHist").textContent="";$("wPlay").classList.add("hidden");
   $("wStatus").textContent="🔊 先聽老師念…";
   await say(w);
   $("wMic").disabled=false;
-  if(idx!==wIdx||setAt!==cur)return;
+  if(idx!==wIdx||setAt!==wKey())return;
   micUI($("wMic"),true,"");$("wStatus").textContent="🎤 換你念！";
   const {r,url}=await recordAndListen(4500,t=>{$("wStatus").textContent="聽到："+t;},$("wRec").checked);
   micUI($("wMic"),false,"");
-  if(idx!==wIdx||setAt!==cur)return;
+  if(idx!==wIdx||setAt!==wKey())return;
   if(!r.alts.length){renderWord();$("wStatus").textContent=r.recBroke?"這台裝置無法同時錄音和辨識，已自動關閉錄音，請再按一次。":errMsg(r.error||"no-speech");return;}
   if(wAudioURL)URL.revokeObjectURL(wAudioURL);wAudioURL=url;
   const ev=scoreWord(w,r.alts,r.confs);
-  const st=wStat[cur]||(wStat[cur]={});const rec=st[w]||(st[w]={best:0,tries:[]});
+  const k=wKey();const st=wStat[k]||(wStat[k]={});const rec=st[w]||(st[w]={best:0,tries:[]});
   rec.tries.push(ev.score);rec.best=Math.max(rec.best,ev.score);
   renderWord(ev);
-  if(ev.score>=100&&$("wAuto").checked&&wIdx<W.length-1){setTimeout(()=>{if(idx===wIdx&&setAt===cur&&!activeRec){wIdx++;renderWord();}},2000);}
+  if(ev.score>=100&&$("wAuto").checked){setTimeout(()=>{if(idx===wIdx&&setAt===wKey()&&!activeRec)wStep(1);},2000);}
 };
 
 /* ===== 自己貼 ===== */
@@ -407,13 +445,16 @@ $("cGo").onclick=()=>{
   if(!sents.length&&!words.length){alert("請先貼上句子或單字。");return;}
   const i=sets.findIndex(s=>s.custom);const set={title:"自訂內容",custom:true,sentences:sents,words};
   if(i>=0)sets[i]=set;else sets.push(set);
-  setSet(sets.indexOf(set));showTab(sents.length?"sent":"word");
+  const si=sets.indexOf(set);setSet(si);setW("S",si,0);showTab(sents.length?"sent":"word");
 };
 
 function showSupport(){const n=$("support");n.classList.remove("hidden");
   n.textContent="這個瀏覽器不支援語音辨識。iPad／iPhone 請用 Safari 開啟，並到「設定 › 一般 › 鍵盤」開啟「啟用聽寫」。";}
 if(!SR)showSupport();
-fillSelects();renderSentence();renderWord();
+(function(){let s=null;try{s=JSON.parse(localStorage.getItem("ha_wsrc")||"null");}catch(e){}
+  if(s&&((s.k==="L"&&WB[s.i]&&s.p<Math.ceil(WB[s.i].words.length/PACK))||(s.k==="S"&&sets[s.i])))wSrc=s;
+  else if(WB.length)wSrc={k:"L",i:0,p:0};})();
+fillSelects();renderSentence();renderWord();markKid();
 </script>
 </body>
 </html>
