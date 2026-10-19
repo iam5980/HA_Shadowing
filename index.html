@@ -23,7 +23,7 @@ main{max-width:760px;margin:0 auto;padding:12px 16px 40px}
 select,textarea{width:100%;font-size:1rem;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
 textarea{font-family:inherit;margin:6px 0 14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:12px}
-.meta{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:.9rem;gap:8px;flex-wrap:wrap}
+.meta span{display:flex;gap:12px;flex-wrap:wrap}.meta{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:.9rem;gap:8px;flex-wrap:wrap}
 .toggle{display:flex;align-items:center;gap:6px}
 .sentence{font-size:1.7rem;line-height:1.6;margin:14px 0;font-family:Georgia,"Times New Roman",serif}
 .sentence span{display:inline-block;padding:0 3px;margin:1px 0;border-radius:6px;cursor:pointer}
@@ -57,9 +57,24 @@ textarea{font-family:inherit;margin:6px 0 14px}
 .auto{justify-content:center;margin-top:12px;color:var(--muted);font-weight:400}
 .badge{font-size:.8rem;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--line)}
 .mic:disabled{opacity:.6}
-.kids{display:flex;gap:8px;margin-bottom:8px}.kids button{flex:1;padding:10px 6px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:.95rem}
-.kids button.on{border-color:var(--accent);outline:2px solid var(--accent)}
+.kidsX{display:none}.kidsX button{flex:1;padding:10px 6px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:.95rem}
+.kidsX button.on{border-color:var(--accent);outline:2px solid var(--accent)}
 .sels{display:flex;gap:8px}.sels select{flex:1;min-width:0}
+.cefr{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px;padding-bottom:2px}
+.cefr button{flex:0 0 auto;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:.9rem}
+.cefr button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.cefr button small{opacity:.75;margin-left:4px;font-size:.75rem}
+.modes{display:flex;gap:6px;margin-top:10px}
+.modes button{flex:1;padding:9px 4px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:.95rem}
+.modes button.on{border-color:var(--accent);outline:2px solid var(--accent);font-weight:700}
+.zh{text-align:center;color:var(--muted);font-size:1.05rem;margin:-8px 0 12px;min-height:1.2em}
+.word.zhq{font-family:inherit;font-size:1.6rem;line-height:1.5}
+.ans{text-align:center;font-size:1.4rem;margin-top:6px;min-height:1.2em;font-family:Georgia,"Times New Roman",serif}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.opts button{padding:14px 8px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:1.05rem;min-height:3.4em}
+.opts button.good{background:var(--goodbg);border-color:var(--good);color:var(--good);font-weight:700}
+.opts button.bad{background:var(--badbg);border-color:var(--bad);color:var(--bad)}
+.tally{text-align:center;color:var(--muted);font-size:.9rem;margin-top:8px;min-height:1.1em}
 .lvlnote{color:var(--muted);font-size:.85rem;margin-top:6px;min-height:1em}
 .notice{background:var(--warnbg);color:var(--warn);padding:12px;border-radius:12px;margin-top:8px}
 label{font-weight:600}
@@ -93,20 +108,26 @@ label{font-weight:600}
   </section>
 
   <section id="tab-word" class="hidden">
-    <div class="kids"><button data-kid="pet">👦 Howard｜B1 PET</button><button data-kid="movers">👧 Audrey｜A1 Movers</button></div>
+    <div class="cefr" id="cefrBar" aria-label="依難度選擇"></div>
     <div class="sels"><select id="lvlSel" aria-label="程度"></select><select id="packSel" aria-label="分包"></select></div>
     <div id="lvlNote" class="lvlnote"></div>
+    <div class="modes" id="modeBar"><button data-mode="say">🗣 跟讀發音</button><button data-mode="e2c">英翻中</button><button data-mode="c2e">中翻英（用說的）</button></div>
     <div class="card">
       <div class="meta"><span id="wPos"></span>
-        <label class="toggle"><input type="checkbox" id="wRec" checked> 錄下我的聲音</label></div>
+        <span><label class="toggle" id="zhToggle"><input type="checkbox" id="wShowZh" checked> 顯示中文</label>
+        <label class="toggle"><input type="checkbox" id="wRec" checked> 錄音</label></span></div>
       <p id="wText" class="word"></p>
+      <p id="wZh" class="zh"></p>
       <div class="btns"><button id="wSay">🔊 示範</button><button id="wSlow">🐢 慢速</button></div>
       <button id="wMic" class="mic">▶ 先聽再念</button>
+      <div id="wOpts" class="opts hidden"></div>
       <div id="wStatus" class="status"></div>
       <div id="wResult" class="wresult"></div>
+      <div id="wAns" class="ans"></div>
       <div id="wHist" class="hist"></div>
       <div id="wPlay" class="btns hidden" style="margin-top:10px"><button id="wMine">🎧 聽我的錄音</button><button id="wAgain">🔊 再聽示範</button></div>
-      <label class="toggle auto"><input type="checkbox" id="wAuto" checked> 拿到 100 分自動跳下一個</label>
+      <div id="wTally" class="tally"></div>
+      <label class="toggle auto"><input type="checkbox" id="wAuto" checked> 答對或拿到 100 分自動跳下一個</label>
       <div class="nav"><button id="wPrev">◀ 上一個</button><button id="wNext">下一個 ▶</button></div>
     </div>
     <div class="card"><div class="chips" id="wList"></div></div>
@@ -291,10 +312,21 @@ const PACK=20;
 let wSrc={k:"S",i:0,p:0};
 function packCount(){return wSrc.k==="L"?Math.ceil(WB[wSrc.i].words.length/PACK):1;}
 const wKey=()=>wSrc.k+wSrc.i+"_"+wSrc.p;
+const CEFRS=["全部","Pre-A1","A1","A2","B1","B2","C1"];
+let cefrF="全部";try{cefrF=localStorage.getItem("ha_cefr")||"全部";}catch(e){}
+if(!CEFRS.includes(cefrF))cefrF="全部";
+const CEFR_HINT={"Pre-A1":"入門","A1":"初階","A2":"基礎","B1":"中級","B2":"中高級","C1":"高級"};
+function fillCefr(){
+  $("cefrBar").innerHTML=CEFRS.filter(c=>c==="全部"||WB.some(L=>L.cefr===c)).map(c=>`<button data-c="${c}" class="${c===cefrF?"on":""}">${c}${CEFR_HINT[c]?`<small>${CEFR_HINT[c]}</small>`:""}</button>`).join("");
+}
+$("cefrBar").onclick=e=>{const b=e.target.closest("button");if(!b)return;cefrF=b.dataset.c;try{localStorage.setItem("ha_cefr",cefrF);}catch(x){}
+  fillCefr();fillLvl();
+  if(cefrF!=="全部"&&!(wSrc.k==="L"&&WB[wSrc.i]&&WB[wSrc.i].cefr===cefrF)){const i=WB.findIndex(L=>L.cefr===cefrF);if(i>=0)setW("L",i,0);}};
 function fillLvl(){
   const groups=[];
-  WB.forEach((L,i)=>{let G=groups.find(x=>x.g===L.route);if(!G)groups.push(G={g:L.route,items:[]});G.items.push(`<option value="L${i}">${esc(L.name)}（${L.words.length} 字）</option>`);});
-  const ex=sets.map((s,i)=>(s.words&&s.words.length)||(s.sentences&&s.sentences.length)?`<option value="S${i}">${esc(s.title)}</option>`:"").join("");
+  WB.forEach((L,i)=>{if(cefrF!=="全部"&&L.cefr!==cefrF)return;let G=groups.find(x=>x.g===L.route);if(!G)groups.push(G={g:L.route,items:[]});
+    G.items.push(`<option value="L${i}">${esc(L.name)}${L.name===L.cefr?"":`〔${L.cefr}〕`}（${L.words.length} 字）</option>`);});
+  const ex=cefrF!=="全部"?"":sets.map((s,i)=>(s.words&&s.words.length)||(s.sentences&&s.sentences.length)?`<option value="S${i}">${esc(s.title)}</option>`:"").join("");
   $("lvlSel").innerHTML=groups.map(G=>`<optgroup label="${esc(G.g)}">${G.items.join("")}</optgroup>`).join("")+(ex?`<optgroup label="範例／自訂">${ex}</optgroup>`:"");
   $("lvlSel").value=wSrc.k+wSrc.i;fillPack();
 }
@@ -305,12 +337,10 @@ function fillPack(){
   for(let p=0;p<packCount();p++){const a=W[p*PACK],b=W[Math.min(W.length,(p+1)*PACK)-1];o+=`<option value="${p}">第 ${p+1} 包｜${esc(a)} – ${esc(b)}</option>`;}
   ps.innerHTML=o;ps.value=wSrc.p;$("lvlNote").textContent=WB[wSrc.i].note||"";
 }
-function setW(k,i,p){wSrc={k,i:+i,p:+p||0};wIdx=0;$("lvlSel").value=k+i;fillPack();renderWord();markKid();
+function setW(k,i,p){wSrc={k,i:+i,p:+p||0};wIdx=0;$("lvlSel").value=k+i;fillPack();renderWord();
   try{localStorage.setItem("ha_wsrc",JSON.stringify(wSrc));}catch(e){}}
 $("lvlSel").onchange=e=>{const v=e.target.value;setW(v[0],v.slice(1),0);};
 $("packSel").onchange=e=>setW("L",wSrc.i,e.target.value);
-function markKid(){document.querySelectorAll(".kids button").forEach(b=>{const L=WB[wSrc.i];b.classList.toggle("on",wSrc.k==="L"&&L&&L.id===b.dataset.kid);});}
-document.querySelectorAll(".kids button").forEach(b=>b.onclick=()=>{const i=WB.findIndex(L=>L.id===b.dataset.kid);if(i>=0)setW("L",i,0);else alert("題庫還沒放入這個程度的字表。");});
 
 /* ===== 分頁 ===== */
 function showTab(t){document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
@@ -382,8 +412,15 @@ $("sResult").addEventListener("click",async e=>{
   $("sStatus").textContent="「"+w+"」我聽到："+ev.heard;
 });
 
-/* ===== 單字練習（先聽 → 自動錄音 → 打分，可重複到 100 分） ===== */
-let wAudioURL=null;
+/* ===== 單字練習：跟讀發音／英翻中／中翻英 ===== */
+let wAudioURL=null,wMode="say";try{wMode=localStorage.getItem("ha_wmode")||"say";}catch(e){}
+if(!["say","e2c","c2e"].includes(wMode))wMode="say";
+const optCache={};
+function curZh(){if(wSrc.k==="L"&&WB[wSrc.i]&&WB[wSrc.i].zh)return WB[wSrc.i].zh.slice(wSrc.p*PACK,(wSrc.p+1)*PACK);return curWords().map(()=>"");}
+function zhPool(){if(wSrc.k==="L"&&WB[wSrc.i]&&WB[wSrc.i].zh)return WB[wSrc.i].zh;return curZh();}
+const noLatin=z=>z.replace(/（[^）]*[A-Za-z][^）]*）/g,"").replace(/\([^)]*[A-Za-z][^)]*\)/g,"").replace(/\s{2,}/g," ").trim();
+const shortZh=z=>{if(!z)return "";const seg=z.split("；")[0].replace(/^[a-z./]+\s+/,"");return noLatin(seg.split("、").slice(0,2).join("、"));};
+const mKey=()=>wKey()+"|"+wMode;
 async function recordAndListen(maxMs,onInterim,useRec){
   const p=listen(maxMs,onInterim);
   const recOK=(useRec&&!recordBroken)?await startRecorder():false;
@@ -391,50 +428,91 @@ async function recordAndListen(maxMs,onInterim,useRec){
   if(!r.alts.length&&recOK&&["audio-capture","not-allowed","aborted"].includes(r.error)){recordBroken=true;$("wRec").checked=false;$("recToggle").checked=false;r.recBroke=true;}
   return {r,url};
 }
+function setMode(m){wMode=m;try{localStorage.setItem("ha_wmode",m);}catch(e){}
+  document.querySelectorAll("#modeBar button").forEach(b=>b.classList.toggle("on",b.dataset.mode===m));if(activeRec)activeRec.stop();renderWord();}
+$("modeBar").onclick=e=>{const b=e.target.closest("button");if(b)setMode(b.dataset.mode);};
+$("wShowZh").onchange=()=>renderWord();
+function tally(st){const v=Object.values(st).filter(r=>wMode==="e2c"?r.first!=null:r.tries.length);if(!v.length)return "";
+  if(wMode==="e2c"){const ok=v.filter(r=>r.first===100).length;return `這一包：答了 ${v.length} 題，一次就答對 ${ok} 題`;}
+  const ok=v.filter(r=>r.best>=100).length;return `這一包：練了 ${v.length} 個，${ok} 個拿到 100 分`;}
 function renderWord(ev){
-  const W=curWords();const k=wKey();const st=wStat[k]||(wStat[k]={});
-  if(!W.length){$("wPos").textContent="這組沒有單字";$("wText").textContent="";$("wList").innerHTML="";return;}
-  if(wIdx>=W.length)wIdx=0;const w=W[wIdx];const rec=st[w];
-  $("wPos").textContent=(wSrc.k==="L"?`第 ${wSrc.p+1}/${packCount()} 包・`:"")+`第 ${wIdx+1} / ${W.length} 個`;$("wText").textContent=w;
-  $("wMic").textContent=rec&&rec.tries.length?(rec.best>=100?"▶ 再挑戰一次":"🔁 再念一次"):"▶ 先聽再念";
-  if(ev){$("wResult").innerHTML=`<div class="big ${lvl(ev.score)}">${ev.score}<small> 分</small></div><div>${wCheer(ev.score)}</div>`;
-    $("wStatus").textContent="我聽到：「"+ev.heard+"」";}
-  else{$("wResult").innerHTML="";$("wStatus").textContent="";}
-  $("wHist").textContent=rec&&rec.tries.length?`練習紀錄：${rec.tries.slice(-8).join(" → ")}　最高 ${rec.best} 分`:"";
+  const W=curWords(),Z=curZh();const k=mKey();const st=wStat[k]||(wStat[k]={});
+  const done=r=>r&&(wMode==="e2c"?r.first!=null:r.tries.length>0);
+  const say_=wMode==="say",e2c=wMode==="e2c",c2e=wMode==="c2e";
+  document.querySelectorAll("#modeBar button").forEach(b=>b.classList.toggle("on",b.dataset.mode===wMode));
+  if(!W.length){$("wPos").textContent="這組沒有單字";$("wText").textContent="";$("wList").innerHTML="";$("wOpts").innerHTML="";return;}
+  if(wIdx>=W.length)wIdx=0;const w=W[wIdx],z=Z[wIdx]||"";const rec=st[w];
+  $("wPos").textContent=(wSrc.k==="L"?`第 ${wSrc.p+1}/${packCount()} 包・`:"")+`第 ${wIdx+1} / ${W.length} 個`;
+  $("wText").textContent=c2e?(noLatin(z)||"（這個字暫無中文，請念："+w+"）"):w;
+  $("wText").classList.toggle("zhq",c2e);
+  $("zhToggle").classList.toggle("hidden",!say_);
+  $("wZh").textContent=say_&&$("wShowZh").checked?z:"";
+  $("wMic").classList.toggle("hidden",e2c);$("wOpts").classList.toggle("hidden",!e2c);
+  $("wSlow").classList.toggle("hidden",c2e&&!(rec&&rec.tries.length));
+  $("wSay").textContent=c2e?(rec&&rec.tries.length?"🔊 聽答案":"👀 看答案"):"🔊 示範";
+  $("wMic").textContent=say_?(rec&&rec.tries.length?(rec.best>=100?"▶ 再挑戰一次":"🔁 再念一次"):"▶ 先聽再念"):(rec&&rec.tries.length?"🔁 再說一次":"🎤 說出英文");
+  $("wAns").innerHTML=c2e&&rec&&(rec.tries.length||rec.peek)?`答案：<b>${esc(w)}</b>`:"";
+  if(ev){$("wResult").innerHTML=`<div class="big ${lvl(ev.score)}">${ev.score}<small> 分</small></div><div>${wCheer(ev.score)}</div>`;$("wStatus").textContent="我聽到：「"+ev.heard+"」";}
+  else if(!e2c){$("wResult").innerHTML="";$("wStatus").textContent="";}
+  if(e2c)buildOpts(w,z,st,ev);
+  $("wHist").textContent=!e2c&&rec&&rec.tries.length?`練習紀錄：${rec.tries.slice(-8).join(" → ")}　最高 ${rec.best} 分`:"";
   $("wPlay").classList.toggle("hidden",!(ev&&wAudioURL));
+  $("wTally").textContent=tally(st);
   $("wPrev").disabled=wIdx===0&&wSrc.p===0;$("wNext").disabled=wIdx>=W.length-1&&wSrc.p>=packCount()-1;
-  $("wList").innerHTML=W.map((x,i)=>{const r=st[x];return `<div class="chip ${r?lvl(r.best):""} ${i===wIdx?"cur":""}" data-i="${i}"><span>${esc(x)}</span>${r?`<span class="badge">${r.best}</span>`:""}</div>`;}).join("");
+  $("wList").innerHTML=W.map((x,i)=>{const r=done(st[x])?st[x]:null;const lab=c2e?(shortZh(Z[i])||x):x;
+    const sc=r?(e2c?(r.first===100?"ok":"bad"):lvl(r.best)):"";const bd=r?(e2c?(r.first===100?"✓":"✗"):r.best):"";
+    return `<div class="chip ${sc} ${i===wIdx?"cur":""}" data-i="${i}"><span>${esc(lab)}</span>${r?`<span class="badge">${bd}</span>`:""}</div>`;}).join("");
 }
+function buildOpts(w,z,st,ev){
+  const k=mKey()+"#"+w;const right=shortZh(z)||"（暫無中文）";
+  if(!optCache[k]){const pool=[...new Set(zhPool().map(shortZh).filter(x=>x&&x!==right))];const ds=[];
+    while(ds.length<3&&pool.length){ds.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);}
+    const all=[right,...ds];for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[all[i],all[j]]=[all[j],all[i]];}optCache[k]=all;}
+  const rec=st[w];const picked=rec&&rec.pick;
+  $("wOpts").innerHTML=optCache[k].map((o,i)=>{let c="";if(picked!=null){if(o===right)c="good";else if(o===picked)c="bad";}
+    return `<button data-o="${i}" class="${c}">${esc(o)}</button>`;}).join("");
+  if(picked==null){$("wResult").innerHTML="";$("wStatus").textContent="選出正確的中文意思（可以先按 🔊 聽發音）";}
+  else{$("wResult").innerHTML=picked===right?`<div class="big ok">✅</div><div>答對了！</div>`:`<div class="big bad">❌</div><div>正確答案：${esc(right)}</div>`;$("wStatus").textContent=z;}
+}
+$("wOpts").onclick=e=>{const b=e.target.closest("button");if(!b)return;
+  const W=curWords(),Z=curZh(),w=W[wIdx],z=Z[wIdx]||"",k=mKey();const st=wStat[k]||(wStat[k]={});
+  const o=optCache[k+"#"+w][+b.dataset.o];const right=shortZh(z)||"（暫無中文）";const ok=o===right;
+  const rec=st[w]||(st[w]={best:0,tries:[]});if(rec.first==null)rec.first=ok?100:0;rec.pick=o;rec.tries.push(ok?100:0);rec.best=Math.max(rec.best,ok?100:0);
+  renderWord();say(w);
+  if(ok&&$("wAuto").checked){const idx=wIdx,at=k;setTimeout(()=>{if(idx===wIdx&&at===mKey())wStep(1);},1500);}
+  else if(!ok){setTimeout(()=>{if(st[w]&&st[w].pick===o&&o!==right){delete st[w].pick;renderWord();$("wStatus").textContent="再選一次看看";}},1800);}
+};
 $("wList").onclick=e=>{const c=e.target.closest(".chip");if(c){wIdx=+c.dataset.i;renderWord();}};
-$("wSay").onclick=()=>{const W=curWords();if(W.length)say(W[wIdx]);};
+$("wSay").onclick=()=>{const W=curWords();if(!W.length)return;const w=W[wIdx];
+  if(wMode==="c2e"){const k=mKey();const st=wStat[k]||(wStat[k]={});const r=st[w]||(st[w]={best:0,tries:[]});r.peek=true;renderWord();$("wSlow").classList.remove("hidden");}
+  say(w);};
 $("wSlow").onclick=()=>{const W=curWords();if(W.length)say(W[wIdx],true);};
 $("wAgain").onclick=()=>{const W=curWords();if(W.length)say(W[wIdx]);};
 $("wMine").onclick=()=>{if(wAudioURL){speechSynthesis.cancel();new Audio(wAudioURL).play();}};
 function wStep(d){const n=curWords().length;
-  if(d>0){if(wIdx<n-1){wIdx++;renderWord();}else if(wSrc.p<packCount()-1){setW("L",wSrc.i,wSrc.p+1);}}
-  else{if(wIdx>0){wIdx--;renderWord();}else if(wSrc.p>0){setW("L",wSrc.i,wSrc.p-1);wIdx=curWords().length-1;renderWord();}}}
+  if(d>0){if(wIdx<n-1){wIdx++;renderWord();}else if(wSrc.k==="L"&&wSrc.p<packCount()-1){setW("L",wSrc.i,wSrc.p+1);}}
+  else{if(wIdx>0){wIdx--;renderWord();}else if(wSrc.k==="L"&&wSrc.p>0){setW("L",wSrc.i,wSrc.p-1);wIdx=curWords().length-1;renderWord();}}}
 $("wPrev").onclick=()=>wStep(-1);
 $("wNext").onclick=()=>wStep(1);
 $("wMic").onclick=async()=>{
   if(activeRec){activeRec.stop();return;}
   if(!SR){showSupport();return;}
-  const W=curWords();if(!W.length)return;const w=W[wIdx];const idx=wIdx,setAt=wKey();
+  const W=curWords();if(!W.length)return;const w=W[wIdx];const idx=wIdx,at=mKey();const sayMode=wMode==="say";
   $("wMic").disabled=true;$("wResult").innerHTML="";$("wHist").textContent="";$("wPlay").classList.add("hidden");
-  $("wStatus").textContent="🔊 先聽老師念…";
-  await say(w);
+  if(sayMode){$("wStatus").textContent="🔊 先聽老師念…";await say(w);}
   $("wMic").disabled=false;
-  if(idx!==wIdx||setAt!==wKey())return;
-  micUI($("wMic"),true,"");$("wStatus").textContent="🎤 換你念！";
-  const {r,url}=await recordAndListen(4500,t=>{$("wStatus").textContent="聽到："+t;},$("wRec").checked);
+  if(idx!==wIdx||at!==mKey())return;
+  micUI($("wMic"),true,"");$("wStatus").textContent=sayMode?"🎤 換你念！":"🎤 請說出英文…";
+  const {r,url}=await recordAndListen(sayMode?4500:6000,t=>{$("wStatus").textContent="聽到："+t;},$("wRec").checked);
   micUI($("wMic"),false,"");
-  if(idx!==wIdx||setAt!==wKey())return;
+  if(idx!==wIdx||at!==mKey())return;
   if(!r.alts.length){renderWord();$("wStatus").textContent=r.recBroke?"這台裝置無法同時錄音和辨識，已自動關閉錄音，請再按一次。":errMsg(r.error||"no-speech");return;}
   if(wAudioURL)URL.revokeObjectURL(wAudioURL);wAudioURL=url;
   const ev=scoreWord(w,r.alts,r.confs);
-  const k=wKey();const st=wStat[k]||(wStat[k]={});const rec=st[w]||(st[w]={best:0,tries:[]});
+  const st=wStat[at]||(wStat[at]={});const rec=st[w]||(st[w]={best:0,tries:[]});
   rec.tries.push(ev.score);rec.best=Math.max(rec.best,ev.score);
   renderWord(ev);
-  if(ev.score>=100&&$("wAuto").checked){setTimeout(()=>{if(idx===wIdx&&setAt===wKey()&&!activeRec)wStep(1);},2000);}
+  if(ev.score>=100&&$("wAuto").checked){setTimeout(()=>{if(idx===wIdx&&at===mKey()&&!activeRec)wStep(1);},2000);}
 };
 
 /* ===== 自己貼 ===== */
@@ -454,7 +532,7 @@ if(!SR)showSupport();
 (function(){let s=null;try{s=JSON.parse(localStorage.getItem("ha_wsrc")||"null");}catch(e){}
   if(s&&((s.k==="L"&&WB[s.i]&&s.p<Math.ceil(WB[s.i].words.length/PACK))||(s.k==="S"&&sets[s.i])))wSrc=s;
   else if(WB.length)wSrc={k:"L",i:0,p:0};})();
-fillSelects();renderSentence();renderWord();markKid();
+fillCefr();fillSelects();renderSentence();renderWord();
 </script>
 </body>
 </html>
